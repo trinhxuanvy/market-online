@@ -8,6 +8,7 @@ export interface SystemUser {
   username?: string | null;
   fullName?: string | null;
   address?: string | null;
+  region?: number | null;
   gender?: number | null;
   phoneNumber?: string | null;
   userType?: number | null;
