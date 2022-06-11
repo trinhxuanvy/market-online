@@ -1,7 +1,7 @@
-import { OkPacket, RowDataPacket } from "mysql2";
-import { database } from "../connection";
-import { isObjEmpty, isDate } from "../utils";
-import { ObjectUser } from "./ObjectUserModel";
+import { OkPacket, RowDataPacket } from 'mysql2';
+import { database } from '../connection';
+import { isObjEmpty, isDate } from '../utils';
+import { ObjectUser } from './ObjectUserModel';
 
 export interface SystemUser {
   userId?: number | null;
@@ -40,7 +40,7 @@ export const find = (query?: SystemUser): Promise<SystemUser[]> => {
         arrValue.push(query[item]);
       }
 
-      queryString += " WHERE " + arrAttrStr.join(" and ");
+      queryString += ' WHERE ' + arrAttrStr.join(' and ');
     }
 
     database.query(queryString, arrValue, (err, result) => {
@@ -52,11 +52,11 @@ export const find = (query?: SystemUser): Promise<SystemUser[]> => {
       rows.forEach((row) => {
         const systemUser: SystemUser = {
           userId: row.userid,
-          username: row.username || "",
-          fullName: row.fullname || "",
-          address: row.address || "",
-          gender: row.gender[0],
-          phoneNumber: row.phonenumber || "",
+          username: row.username || '',
+          fullName: row.fullname || '',
+          address: row.address || '',
+          gender: row.gender === null ? 0 : row.gender[0],
+          phoneNumber: row.phonenumber || '',
           userType: row.usertype,
           password: row.password,
           createdUser: row.createduser,
@@ -65,7 +65,7 @@ export const find = (query?: SystemUser): Promise<SystemUser[]> => {
           updatedDate: row.updateddate,
           deletedUser: row.deleteduser,
           deletedDate: row.deleteddate,
-          isDeleted: row.isdeleted[0],
+          isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
           token: row.token,
           refresh_token: row.refresh_token,
         };
@@ -89,11 +89,11 @@ export const findOneById = (userId: number): Promise<SystemUser> => {
       const systemUser: SystemUser = row
         ? {
             userId: row.userId,
-            username: row.username || "",
-            fullName: row.fullname || "",
-            address: row.address || "",
-            gender: row.gender[0],
-            phoneNumber: row.phonenumber || "",
+            username: row.username || '',
+            fullName: row.fullname || '',
+            address: row.address || '',
+            gender: row.gender === null ? 0 : row.gender[0],
+            phoneNumber: row.phonenumber || '',
             userType: row.usertype,
             password: row.password,
             createdUser: row.createduser,
@@ -102,7 +102,7 @@ export const findOneById = (userId: number): Promise<SystemUser> => {
             updatedDate: row.updateddate,
             deletedUser: row.deleteduser,
             deletedDate: row.deleteddate,
-            isDeleted: row.isdeleted[0],
+            isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
             token: row.token,
             refresh_token: row.refresh_token,
           }
@@ -166,7 +166,7 @@ export const createOnlyUser = (userInfo: ObjectUser): Promise<number> => {
         if (err) reject(err);
         const insertId = (<OkPacket>result).insertId;
         resolve(insertId);
-      }
+      },
     );
   });
 };
