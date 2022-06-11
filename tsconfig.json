@@ -3,6 +3,8 @@
     "module": "commonjs",
     "target": "ES6",
     "rootDir": "./",
-    "esModuleInterop": true
-  }
+    "esModuleInterop": true,
+    "types": ["@types/node", "@types/bcrypt"]
+  },
+  "exclude": ["node_modules"]
 }

@@ -9,4 +9,6 @@ router.get(
   systemUserController.getSystemUserById
 );
 
+router.post("/api/v1/RegisterAccount", systemUserController.registerAccount);
+
 export default router;
