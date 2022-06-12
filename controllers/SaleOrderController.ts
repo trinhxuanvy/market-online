@@ -1,12 +1,12 @@
 import { query, Request, Response } from 'express';
 import {
-  Store,
+  SaleOrder,
   findOneById,
   find,
   createOne,
   updateOne,
   deleteOne,
-} from '../models/Store';
+} from '../models/SaleOrder';
 
 export const getById = async (req: Request<{ id: number }>, res: Response) => {
   try {
@@ -19,7 +19,7 @@ export const getById = async (req: Request<{ id: number }>, res: Response) => {
     });
   }
 };
-export const getByUserId = async (req: Request<Store>, res: Response) => {
+export const getByUserId = async (req: Request<SaleOrder>, res: Response) => {
   try {
     const entities = await find(req.params);
 
@@ -30,7 +30,7 @@ export const getByUserId = async (req: Request<Store>, res: Response) => {
     });
   }
 };
-export const post = async (req: Request<Store>, res: Response) => {
+export const post = async (req: Request<SaleOrder>, res: Response) => {
   try {
     const entities = await createOne(req.body);
     res.status(200).send(true);
@@ -40,7 +40,7 @@ export const post = async (req: Request<Store>, res: Response) => {
     });
   }
 };
-export const put = async (req: Request<Store>, res: Response) => {
+export const put = async (req: Request<SaleOrder>, res: Response) => {
   try {
     const entities = await updateOne(req.body);
     res.status(200).send(true);

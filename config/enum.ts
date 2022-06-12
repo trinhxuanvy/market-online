@@ -20,3 +20,14 @@ export enum StoreType {
   Clothes = 2,
   Electric = 3,
 }
+
+export enum PaymentType {
+  Money = 1,
+  Momo = 2,
+  ZaloPay = 3,
+}
+
+export enum SaleOrderType {
+  Approved = 1,
+  Unapproved = 2,
+}

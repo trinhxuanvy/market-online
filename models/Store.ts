@@ -5,7 +5,7 @@ import { isObjEmpty, isDate } from '../utils';
 
 export interface Store {
   storeId?: number | null;
-  userId?: string | null;
+  userId?: number | null;
   storeName?: string | null;
   address?: string | null;
   phoneNumber?: string | null;
@@ -121,8 +121,8 @@ export const createOne = (entity: Store): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const arrValue = [];
     const entityAdapt: Store = {
-      storeId: entity.storeId || 0,
-      userId: entity.userId || '',
+      storeId: entity.storeId || -1,
+      userId: entity.userId || -1,
       storeName: entity.storeName || '',
       address: entity.address || '',
       phoneNumber: entity.phoneNumber || '',
@@ -179,7 +179,7 @@ export const updateOne = (entity: Store): Promise<boolean> => {
     const arrValue = [];
     const entityAdapt: Store = {
       storeId: entity.storeId || 0,
-      userId: entity.userId || '',
+      userId: entity.userId || 0,
       storeName: entity.storeName || '',
       address: entity.address || '',
       phoneNumber: entity.phoneNumber || '',
