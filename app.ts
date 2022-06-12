@@ -1,7 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
+import listEndpoints from "express-list-endpoints";
 import routes from "./routes";
+import { getApiTable } from "./utils/api-table";
 
 dotenv.config();
 
@@ -20,4 +22,6 @@ app.use(routes);
 
 app.listen(port, () => {
   console.log(`Listening at port ${port}`);
+  console.log("========= List api =========");
+  console.log(getApiTable(listEndpoints(app)));
 });

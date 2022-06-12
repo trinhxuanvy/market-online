@@ -1,63 +1,181 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { verify, sign } from "jsonwebtoken";
 import { compareSync, genSaltSync, hashSync } from "bcrypt";
 import { ObjectUser } from "../models/ObjectUserModel";
 import * as SystemUser from "../models/SystemUser";
 import { UserType } from "../config/enum";
+import config from "../config/config";
+import { checkExpiredDate5Minutes } from "../utils";
 
-const saltRounds = genSaltSync(10);
+export const verifyTokenClient = async (
+  req: Request<any>,
+  res: Response,
+  next: NextFunction
+) => {
+  const bearer = req.headers["bearer"] as unknown as string;
+  const refresh_token = req.headers["refresh_token"] as unknown as string;
+  const userid = req.headers["userid"] as unknown as number;
 
-export const verifyTokenClient = (req: Request, res: Response) => {
-  const bearer = req.headers.authorization;
-
-  if (bearer !== "undefined") {
-    const splitBearer = bearer.split(" ");
+  if (bearer !== "undefined" && refresh_token !== "undefined") {
+    const splitBearer = bearer?.split(" ");
     const token = splitBearer[1];
 
-    verify(token, "vychuoi123", (err, data: ObjectUser) => {
-      if (err) {
-        return res
-          .status(403)
-          .send({ status: 403, message: "Your account has expired." });
-      }
+    SystemUser.find({ userId: userid })
+      .then(async (result) => {
+        if (result.length === 0) {
+          return res
+            .status(404)
+            .send({ status: 404, message: "Account does not exists." });
+        }
 
-      if (data.userType !== UserType.Client) {
-        return res
-          .status(403)
-          .send({ status: 403, message: "Please login again." });
-      }
+        if (
+          result[0].token === token &&
+          result[0].refresh_token === refresh_token &&
+          result[0].userType === UserType.Client
+        ) {
+          const vReToken = verify(
+            refresh_token,
+            config.refreshTokenSecret,
+            (reTokenErr, reTokenData) => {
+              if (reTokenErr) return null;
 
-      return (res["data"] = data);
-    });
+              return reTokenData;
+            }
+          );
+
+          if (vReToken === null) {
+            return res
+              .status(404)
+              .send({ status: 404, message: "Your account has expired." });
+          }
+
+          const vToken: any = verify(
+            token,
+            config.tokenSecret,
+            (tokenErr, tokenData) => {
+              return tokenData;
+            }
+          );
+
+          const clientObj: ObjectUser = {
+            userId: result[0].userId,
+            username: result[0].username,
+            userType: result[0].userType,
+          };
+
+          if (!checkExpiredDate5Minutes(vToken.exp)) {
+            const newToken = sign(clientObj, config.tokenSecret, {
+              algorithm: "HS256",
+              expiresIn: config.tokenLife,
+            });
+
+            await SystemUser.updateOne({
+              userId: result[0].userId,
+              token: newToken,
+            });
+          }
+
+          res["data"] = clientObj;
+          next();
+        } else {
+          return res
+            .status(401)
+            .send({ status: 401, message: "Unauthorized access." });
+        }
+      })
+      .catch((err) => {
+        return res
+          .status(401)
+          .send({ status: 401, message: "Unauthorized access." });
+      });
   } else {
-    res.status(403).send({ status: 403, message: "Please login again." });
+    res.status(403).send({ status: 403, message: "No token provided." });
   }
 };
 
-export const verifyTokenAdmin = (req: Request, res: Response) => {
-  const bearer = req.headers.authorization;
+export const verifyTokenAdmin = async (
+  req: Request<any>,
+  res: Response,
+  next: NextFunction
+) => {
+  const bearer = req.headers["bearer"] as unknown as string;
+  const refresh_token = req.headers["refresh_token"] as unknown as string;
+  const userid = req.headers["userid"] as unknown as number;
 
-  if (bearer !== "undefined") {
-    const splitBearer = bearer.split(" ");
+  if (bearer !== "undefined" && refresh_token !== "undefined") {
+    const splitBearer = bearer?.split(" ");
     const token = splitBearer[1];
 
-    verify(token, "vychuoi123", (err, data: ObjectUser) => {
-      if (err) {
-        return res
-          .status(403)
-          .send({ status: 403, message: "Your account has expired." });
-      }
+    SystemUser.find({ userId: userid })
+      .then(async (result) => {
+        if (result.length === 0) {
+          return res
+            .status(404)
+            .send({ status: 404, message: "Account does not exists." });
+        }
 
-      if (data.userType !== UserType.Admin) {
-        return res
-          .status(403)
-          .send({ status: 403, message: "Please login again." });
-      }
+        if (
+          result[0].token === token &&
+          result[0].refresh_token === refresh_token &&
+          result[0].userType === UserType.Admin
+        ) {
+          const vReToken = verify(
+            refresh_token,
+            config.refreshTokenSecret,
+            (reTokenErr, reTokenData) => {
+              if (reTokenErr) return null;
 
-      return (res["data"] = data);
-    });
+              return reTokenData;
+            }
+          );
+
+          if (vReToken === null) {
+            return res
+              .status(404)
+              .send({ status: 404, message: "Your account has expired." });
+          }
+
+          const vToken: any = verify(
+            token,
+            config.tokenSecret,
+            (tokenErr, tokenData) => {
+              return tokenData;
+            }
+          );
+
+          const adminObj: ObjectUser = {
+            userId: result[0].userId,
+            username: result[0].username,
+            userType: result[0].userType,
+          };
+
+          if (!checkExpiredDate5Minutes(vToken.exp)) {
+            const newToken = sign(adminObj, config.tokenSecret, {
+              algorithm: "HS256",
+              expiresIn: config.tokenLife,
+            });
+
+            await SystemUser.updateOne({
+              userId: result[0].userId,
+              token: newToken,
+            });
+          }
+
+          res["data"] = adminObj;
+          next();
+        } else {
+          return res
+            .status(401)
+            .send({ status: 401, message: "Unauthorized access." });
+        }
+      })
+      .catch((err) => {
+        return res
+          .status(401)
+          .send({ status: 401, message: "Unauthorized access." });
+      });
   } else {
-    res.status(403).send({ status: 403, message: "Please login again." });
+    res.status(403).send({ status: 403, message: "No token provided." });
   }
 };
 
@@ -81,14 +199,11 @@ export const loginClient = async (req: Request, res: Response) => {
     const clientObj: ObjectUser = {
       userId: client[0].userId,
       username: client[0].username,
-      password: client[0].password,
       userType: client[0].userType,
-      deletedDate: new Date(Date.now()),
-      isDeleted: false,
     };
-    const token = sign(clientObj, "vychuoi123", {
+    const token = sign(clientObj, config.tokenSecret, {
       algorithm: "HS256",
-      expiresIn: "1h",
+      expiresIn: config.tokenLife,
     });
     const bearer = "Bearer " + token;
 
@@ -120,18 +235,31 @@ export const loginAdmin = async (req: Request, res: Response) => {
     const adminObj: ObjectUser = {
       userId: admin[0].userId,
       username: admin[0].username,
-      password: admin[0].password,
       userType: admin[0].userType,
     };
-    const token = sign(adminObj, "vychuoi123", {
+    let token = sign(adminObj, config.tokenSecret, {
       algorithm: "HS256",
-      expiresIn: "1h",
+      expiresIn: config.tokenLife,
     });
-    const bearer = "Bearer " + token;
+    const refreshToken = sign(adminObj, config.refreshTokenSecret, {
+      algorithm: "HS256",
+      expiresIn: config.refreshTokenLife,
+    });
 
-    res
-      .status(200)
-      .send({ status: 200, message: "Logged in successfully", bearer });
+    await SystemUser.updateOne({
+      userId: admin[0].userId,
+      token,
+      refresh_token: refreshToken,
+    });
+
+    token = "Bearer " + token;
+
+    res.status(200).send({
+      status: 200,
+      message: "Logged in successfully",
+      token,
+      refreshToken,
+    });
   } catch (error) {
     res.status(404).send({ status: 404, message: "Error" });
   }
@@ -147,7 +275,7 @@ export const registerClient = async (req: Request, res: Response) => {
         .send({ status: 404, message: "Account already exists." });
     }
 
-    const hashPassword = hashSync(req.body?.password, saltRounds);
+    const hashPassword = hashSync(req.body?.password, config.saltRounds);
 
     await SystemUser.createOnlyUser({
       ...req.body,
@@ -172,7 +300,7 @@ export const registerAdmin = async (req: Request, res: Response) => {
         .send({ status: 404, message: "Account already exists." });
     }
 
-    const hashPassword = hashSync(req.body?.password, saltRounds);
+    const hashPassword = hashSync(req.body?.password, config.saltRounds);
 
     await SystemUser.createOnlyUser({
       ...req.body,
@@ -184,5 +312,26 @@ export const registerAdmin = async (req: Request, res: Response) => {
     res.status(200).send(true);
   } catch (error) {
     res.status(404).send({ status: 404, message: "Error" });
+  }
+};
+
+export const logoutAccount = async (
+  req: Request<{ id: number }>,
+  res: Response
+) => {
+  try {
+    SystemUser.updateOne({
+      userId: req.params.id,
+      token: null,
+      refresh_token: null,
+    })
+      .then(() => {
+        return res.status(200).send({ status: 200, message: "Logged out." });
+      })
+      .catch(() => {
+        return res.status(404).send({ status: 404, message: "Error." });
+      });
+  } catch (error) {
+    return res.status(404).send({ status: 404, message: "Error." });
   }
 };

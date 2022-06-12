@@ -212,10 +212,9 @@ export const updateOne = (systemUser: SystemUser): Promise<number> => {
         arrAttrStr.join(", ") + ` WHERE userid = ${systemUser.userId}`;
     }
 
-    console.log(queryString, arrValue);
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
-      console.log(result);
+
       const updateRow = <OkPacket>result;
       resolve(updateRow.changedRows);
     });
@@ -226,7 +225,6 @@ export const deleteOne = (userId: number): Promise<number> => {
   return new Promise<number>((resolve, reject) => {
     const queryString = `DELETE FROM system_user WHERE userId = ?`;
 
-    console.log(queryString, userId);
     database.query(queryString, userId, (err, result) => {
       if (err) reject(err);
 
