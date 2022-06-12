@@ -1,6 +1,7 @@
 import { OkPacket, RowDataPacket } from "mysql2";
+import { Gender, UserType } from "../config/enum";
 import { database } from "../connection";
-import { isObjEmpty, isDate } from "../utils";
+import { isObjEmpty, isDate, isBoolean } from "../utils";
 import { ObjectUser } from "./ObjectUserModel";
 
 export interface SystemUser {
@@ -120,14 +121,19 @@ export const createOne = (systemUser: SystemUser): Promise<number> => {
       username: systemUser.username,
       fullName: systemUser.fullName,
       address: systemUser.address,
-      gender: systemUser.gender,
+      gender: systemUser.gender || Gender.Male,
       phoneNumber: systemUser.phoneNumber,
       userType: systemUser.userType,
       password: systemUser.password,
       createdUser: systemUser.createdUser,
-      createdDate: systemUser.createdDate,
+      createdDate: systemUser.createdDate || new Date(Date.now()),
+      updatedUser: systemUser.updatedUser,
+      updatedDate: systemUser.updatedDate,
+      deletedUser: systemUser.deletedUser,
+      deletedDate: systemUser.deletedDate,
+      isDeleted: systemUser.isDeleted || false,
     };
-    console.log(systemUser);
+
     const queryString = `INSERT INTO system_user (
         username,
         fullname,
@@ -138,18 +144,22 @@ export const createOne = (systemUser: SystemUser): Promise<number> => {
         password,
         createdUser,
         createdDate,
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        updatedUser,
+        updatedDate,
+        deletedUser,
+        deletedDate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     if (!isObjEmpty(systemUser)) {
       for (let item in systemUserAdapt) {
-        arrValue.push(systemUser[item]);
+        arrValue.push(systemUserAdapt[item]);
       }
     }
 
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
 
-      const insertId = (<OkPacket>result).insertId;
+      const insertId = (<OkPacket>result)?.insertId;
       resolve(insertId);
     });
   });
@@ -180,23 +190,49 @@ export const updateOne = (systemUser: SystemUser): Promise<number> => {
     if (!isObjEmpty(systemUser)) {
       for (let item in systemUser) {
         if (isDate(systemUser[item])) {
-          arrAttrStr.push(`${item} = STR_TO_DATE(?, '%m/%%d/%Y')`);
+          arrAttrStr.push(
+            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`
+          );
         } else if (item !== "userId") {
-          arrAttrStr.push(`${item} = ?`);
+          arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }
-        arrValue.push(systemUser[item]);
+
+        if (!isBoolean(systemUser[item])) {
+          arrValue.push(systemUser[item]);
+        } else {
+          arrValue.push(Number(systemUser[item]));
+        }
+
+        if (item === "userId") {
+          arrValue.pop();
+        }
       }
 
       queryString +=
-        arrAttrStr.join(", ") + ` WHERE userId = ${systemUser.userId}`;
+        arrAttrStr.join(", ") + ` WHERE userid = ${systemUser.userId}`;
     }
 
     console.log(queryString, arrValue);
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
-
+      console.log(result);
       const updateRow = <OkPacket>result;
       resolve(updateRow.changedRows);
+    });
+  });
+};
+
+export const deleteOne = (userId: number): Promise<number> => {
+  return new Promise<number>((resolve, reject) => {
+    const queryString = `DELETE FROM system_user WHERE userId = ?`;
+
+    console.log(queryString, userId);
+    database.query(queryString, userId, (err, result) => {
+      if (err) reject(err);
+
+      const deleteRow = <OkPacket>result;
+      console.log(deleteRow);
+      resolve(deleteRow.changedRows);
     });
   });
 };

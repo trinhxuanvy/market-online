@@ -4,4 +4,6 @@ export interface ObjectUser {
   password?: string | null;
   confirmPassword?: string | null;
   userType: number;
+  isDeleted?: boolean | null;
+  deletedDate?: Date | null;
 }

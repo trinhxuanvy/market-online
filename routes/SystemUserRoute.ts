@@ -22,4 +22,20 @@ router.put("/api/v1/UpdateAdmin", systemUserController.updateSystemUser);
 
 router.post("/api/v1/CreateAdmin", systemUserController.createSystemUser);
 
+router.get(
+  "/api/v1/DeleteSystemUser/:id",
+  systemUserController.deleteSystemUser
+);
+
+router.get(
+  "/api/v1/UnDeleteSystemUser/:id",
+  systemUserController.unDeleteSystemUser
+);
+
+// Don't use api "/api/v1/DeleteForeverSystemUser/:id" because it can destroy the structure of the system.
+router.get(
+  "/api/v1/DeleteForeverSystemUser/:id",
+  systemUserController.deleteForeverSystemUser
+);
+
 export default router;

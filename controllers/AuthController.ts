@@ -83,6 +83,8 @@ export const loginClient = async (req: Request, res: Response) => {
       username: client[0].username,
       password: client[0].password,
       userType: client[0].userType,
+      deletedDate: new Date(Date.now()),
+      isDeleted: false,
     };
     const token = sign(clientObj, "vychuoi123", {
       algorithm: "HS256",
