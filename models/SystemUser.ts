@@ -1,7 +1,7 @@
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { database } from '../connection';
-import { isObjEmpty, isDate } from '../utils';
-import { ObjectUser } from './ObjectUserModel';
+import { OkPacket, RowDataPacket } from "mysql2";
+import { database } from "../connection";
+import { isObjEmpty, isDate } from "../utils";
+import { ObjectUser } from "./ObjectUserModel";
 
 export interface SystemUser {
   userId?: number | null;
@@ -12,7 +12,7 @@ export interface SystemUser {
   gender?: number | null;
   phoneNumber?: string | null;
   userType?: number | null;
-  password: string | null;
+  password?: string | null;
   createdUser?: string | null;
   createdDate?: Date | null;
   updatedUser?: string | null;
@@ -40,7 +40,7 @@ export const find = (query?: SystemUser): Promise<SystemUser[]> => {
         arrValue.push(query[item]);
       }
 
-      queryString += ' WHERE ' + arrAttrStr.join(' and ');
+      queryString += " WHERE " + arrAttrStr.join(" and ");
     }
 
     database.query(queryString, arrValue, (err, result) => {
@@ -52,11 +52,11 @@ export const find = (query?: SystemUser): Promise<SystemUser[]> => {
       rows.forEach((row) => {
         const systemUser: SystemUser = {
           userId: row.userid,
-          username: row.username || '',
-          fullName: row.fullname || '',
-          address: row.address || '',
-          gender: row.gender === null ? 0 : row.gender[0],
-          phoneNumber: row.phonenumber || '',
+          username: row.username,
+          fullName: row.fullname,
+          address: row.address,
+          gender: row.gender[0],
+          phoneNumber: row.phonenumber,
           userType: row.usertype,
           password: row.password,
           createdUser: row.createduser,
@@ -89,11 +89,11 @@ export const findOneById = (userId: number): Promise<SystemUser> => {
       const systemUser: SystemUser = row
         ? {
             userId: row.userId,
-            username: row.username || '',
-            fullName: row.fullname || '',
-            address: row.address || '',
+            username: row.username || "",
+            fullName: row.fullname || "",
+            address: row.address || "",
             gender: row.gender === null ? 0 : row.gender[0],
-            phoneNumber: row.phonenumber || '',
+            phoneNumber: row.phonenumber || "",
             userType: row.usertype,
             password: row.password,
             createdUser: row.createduser,
@@ -116,6 +116,18 @@ export const findOneById = (userId: number): Promise<SystemUser> => {
 export const createOne = (systemUser: SystemUser): Promise<number> => {
   return new Promise<number>((resolve, reject) => {
     const arrValue = [];
+    const systemUserAdapt: SystemUser = {
+      username: systemUser.username,
+      fullName: systemUser.fullName,
+      address: systemUser.address,
+      gender: systemUser.gender,
+      phoneNumber: systemUser.phoneNumber,
+      userType: systemUser.userType,
+      password: systemUser.password,
+      createdUser: systemUser.createdUser,
+      createdDate: systemUser.createdDate,
+    };
+    console.log(systemUser);
     const queryString = `INSERT INTO system_user (
         username,
         fullname,
@@ -126,17 +138,10 @@ export const createOne = (systemUser: SystemUser): Promise<number> => {
         password,
         createdUser,
         createdDate,
-        updatedUser,
-        updatedDate,
-        deletedUser,
-        deletedDate,
-        isDeleted,
-        token,
-        refresh_token
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     if (!isObjEmpty(systemUser)) {
-      for (let item in systemUser) {
+      for (let item in systemUserAdapt) {
         arrValue.push(systemUser[item]);
       }
     }
@@ -152,21 +157,46 @@ export const createOne = (systemUser: SystemUser): Promise<number> => {
 
 export const createOnlyUser = (userInfo: ObjectUser): Promise<number> => {
   return new Promise<number>((resolve, reject) => {
-    const queryString = `INSERT INTO system_user (username, usertype, password, isdeleted) VALUES (?, ?, ?, ?)`;
+    const queryString = `INSERT INTO system_user (username, usertype, password) VALUES (?, ?, ?)`;
 
     database.query(
       queryString,
-      [
-        userInfo.username,
-        userInfo.userType,
-        userInfo.password,
-        userInfo.isDeleted,
-      ],
+      [userInfo.username, userInfo.userType, userInfo.password],
       (err, result) => {
         if (err) reject(err);
         const insertId = (<OkPacket>result).insertId;
         resolve(insertId);
-      },
+      }
     );
+  });
+};
+
+export const updateOne = (systemUser: SystemUser): Promise<number> => {
+  return new Promise<number>((resolve, reject) => {
+    let arrAttrStr = [];
+    let arrValue = [];
+    let queryString = `UPDATE system_user SET `;
+
+    if (!isObjEmpty(systemUser)) {
+      for (let item in systemUser) {
+        if (isDate(systemUser[item])) {
+          arrAttrStr.push(`${item} = STR_TO_DATE(?, '%m/%%d/%Y')`);
+        } else if (item !== "userId") {
+          arrAttrStr.push(`${item} = ?`);
+        }
+        arrValue.push(systemUser[item]);
+      }
+
+      queryString +=
+        arrAttrStr.join(", ") + ` WHERE userId = ${systemUser.userId}`;
+    }
+
+    console.log(queryString, arrValue);
+    database.query(queryString, arrValue, (err, result) => {
+      if (err) reject(err);
+
+      const updateRow = <OkPacket>result;
+      resolve(updateRow.changedRows);
+    });
   });
 };
