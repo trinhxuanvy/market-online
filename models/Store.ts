@@ -88,7 +88,8 @@ export const findOneById = (entityId: number): Promise<Store> => {
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);
 
-      const row = (<RowDataPacket>result)[0];
+      const row =
+        <RowDataPacket>result == null ? null : (<RowDataPacket>result)[0];
       const entity: Store = row
         ? {
             storeId: row.storeid || '',

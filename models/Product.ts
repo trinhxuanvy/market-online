@@ -1,4 +1,3 @@
-import { Console } from 'console';
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { database } from '../connection';
 import { isObjEmpty, isDate, isBoolean } from '../utils';
@@ -82,7 +81,8 @@ export const findOneById = (entityId: number): Promise<Product> => {
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);
 
-      const row = (<RowDataPacket>result)[0];
+      const row =
+        <RowDataPacket>result == null ? null : (<RowDataPacket>result)[0];
       const entity: Product = row
         ? {
             productId: row.productid || '',
