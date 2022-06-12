@@ -37,9 +37,9 @@ export const find = (query?: SaleOrderDetail): Promise<SaleOrderDetail[]> => {
 
       rows.forEach((row) => {
         const entityDb: SaleOrderDetail = {
-          saleOrderDetailId: row.saleOrderDetailId || 0,
-          saleOrderId: row.saleOrderId || 0,
-          productId: row.productId || 0,
+          saleOrderDetailId: row.saleorderdetailid || 0,
+          saleOrderId: row.saleorderid || 0,
+          productId: row.productid || 0,
           quantity: row.quantity || 0,
         };
 
