@@ -1,7 +1,7 @@
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { PaymentType, Region, SaleOrderType, StoreType } from '../config/enum';
-import { database } from '../connection';
-import { isObjEmpty, isDate, isBoolean } from '../utils';
+import { OkPacket, RowDataPacket } from "mysql2";
+import { PaymentType, Region, SaleOrderType, StoreType } from "../config/enum";
+import { database } from "../connection";
+import { isObjEmpty, isDate, isBoolean } from "../utils";
 
 export interface SaleOrderDetail {
   saleOrderDetailId?: number | null;
@@ -26,7 +26,7 @@ export const find = (query?: SaleOrderDetail): Promise<SaleOrderDetail[]> => {
         arrValue.push(query[item]);
       }
 
-      queryString += ' WHERE ' + arrAttrStr.join(' and ');
+      queryString += " WHERE " + arrAttrStr.join(" and ");
     }
 
     database.query(queryString, arrValue, (err, result) => {
@@ -90,7 +90,7 @@ export const createOne = (entity: SaleOrderDetail): Promise<boolean> => {
 
     if (!isObjEmpty(entity)) {
       for (let item in entityAdapt) {
-        if (item === 'saleOrderDetailId') continue;
+        if (item === "saleOrderDetailId") continue;
         arrValue.push(entityAdapt[item]);
       }
     }
@@ -111,10 +111,8 @@ export const updateOne = (entity: SaleOrderDetail): Promise<boolean> => {
     if (!isObjEmpty(entity)) {
       for (let item in entity) {
         if (isDate(entity[item])) {
-          arrAttrStr.push(
-            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`,
-          );
-        } else if (item !== 'saleOrderDetailId') {
+          arrAttrStr.push(`${item.toLowerCase()} = DATE(' ? ')`);
+        } else if (item !== "saleOrderDetailId") {
           arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }
 
@@ -124,13 +122,13 @@ export const updateOne = (entity: SaleOrderDetail): Promise<boolean> => {
           arrValue.push(Number(entity[item]));
         }
 
-        if (item === 'saleOrderDetailId') {
+        if (item === "saleOrderDetailId") {
           arrValue.pop();
         }
       }
 
       queryString +=
-        arrAttrStr.join(', ') +
+        arrAttrStr.join(", ") +
         ` WHERE saleorderdetailid = ${entity.saleOrderDetailId}`;
     }
     database.query(queryString, arrValue, (err, result) => {

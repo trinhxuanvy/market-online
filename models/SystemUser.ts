@@ -190,9 +190,7 @@ export const updateOne = (systemUser: SystemUser): Promise<number> => {
     if (!isObjEmpty(systemUser)) {
       for (let item in systemUser) {
         if (isDate(systemUser[item])) {
-          arrAttrStr.push(
-            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`
-          );
+          arrAttrStr.push(`${item.toLowerCase()} = DATE(?)`);
         } else if (item !== "userId") {
           arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }

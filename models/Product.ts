@@ -1,6 +1,6 @@
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { database } from '../connection';
-import { isObjEmpty, isDate, isBoolean } from '../utils';
+import { OkPacket, RowDataPacket } from "mysql2";
+import { database } from "../connection";
+import { isObjEmpty, isDate, isBoolean } from "../utils";
 
 export interface Product {
   productId?: number | null;
@@ -36,8 +36,8 @@ export const find = (query?: Product): Promise<Product[]> => {
         arrValue.push(query[item]);
       }
 
-      queryString += ' WHERE ' + arrAttrStr.join(' and ');
-      queryString += ' AND isdeleted = false ';
+      queryString += " WHERE " + arrAttrStr.join(" and ");
+      queryString += " AND isdeleted = false ";
     }
 
     database.query(queryString, arrValue, (err, result) => {
@@ -48,9 +48,9 @@ export const find = (query?: Product): Promise<Product[]> => {
 
       rows.forEach((row) => {
         const entityDb: Product = {
-          productId: row.productid || '',
-          productName: row.productname || '',
-          productType: row.producttype || '',
+          productId: row.productid || "",
+          productName: row.productname || "",
+          productType: row.producttype || "",
           storeId: row.storeid || -1,
           quantity: row.quantity || 0,
           vat: row.vat || -1,
@@ -84,9 +84,9 @@ export const findOneById = (entityId: number): Promise<Product> => {
         <RowDataPacket>result == null ? null : (<RowDataPacket>result)[0];
       const entity: Product = row
         ? {
-            productId: row.productid || '',
-            productName: row.productname || '',
-            productType: row.producttype || '',
+            productId: row.productid || "",
+            productName: row.productname || "",
+            productType: row.producttype || "",
             storeId: row.storeid || -1,
             quantity: row.quantity || 0,
             vat: row.vat || -1,
@@ -112,18 +112,18 @@ export const createOne = (entity: Product): Promise<boolean> => {
     const arrValue = [];
     const entityAdapt: Product = {
       productId: entity.productId || -1,
-      productName: entity.productName || '',
+      productName: entity.productName || "",
       productType: entity.productType || 0,
       storeId: entity.storeId || -1,
       quantity: entity.quantity || 0,
       vat: entity.vat || -1,
       salePrice: entity.salePrice || 0,
 
-      createdUser: entity.createdUser || '',
+      createdUser: entity.createdUser || "",
       createdDate: entity.createdDate || new Date(),
-      updatedUser: entity.updatedUser || '',
+      updatedUser: entity.updatedUser || "",
       updatedDate: entity.updatedDate || new Date(),
-      deletedUser: entity.deletedUser || '',
+      deletedUser: entity.deletedUser || "",
       deletedDate: entity.deletedDate,
       isDeleted: entity.isDeleted || false,
     };
@@ -146,7 +146,7 @@ export const createOne = (entity: Product): Promise<boolean> => {
 
     if (!isObjEmpty(entity)) {
       for (let item in entityAdapt) {
-        if (item === 'productId') continue;
+        if (item === "productId") continue;
         arrValue.push(entityAdapt[item]);
       }
     }
@@ -167,10 +167,8 @@ export const updateOne = (entity: Product): Promise<boolean> => {
     if (!isObjEmpty(entity)) {
       for (let item in entity) {
         if (isDate(entity[item])) {
-          arrAttrStr.push(
-            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`,
-          );
-        } else if (item !== 'productId') {
+          arrAttrStr.push(`${item.toLowerCase()} = DATE(' ? ')`);
+        } else if (item !== "productId") {
           arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }
 
@@ -180,13 +178,13 @@ export const updateOne = (entity: Product): Promise<boolean> => {
           arrValue.push(Number(entity[item]));
         }
 
-        if (item === 'productId') {
+        if (item === "productId") {
           arrValue.pop();
         }
       }
 
       queryString +=
-        arrAttrStr.join(', ') + ` WHERE productid = ${entity.productId}`;
+        arrAttrStr.join(", ") + ` WHERE productid = ${entity.productId}`;
     }
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);

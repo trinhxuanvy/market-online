@@ -23,15 +23,21 @@ router.post("/api/v1/RegisterAdmin", authController.registerAdmin);
 router.post("/api/v1/LoginAdmin", authController.loginAdmin);
 
 router.put(
-  "/api/v1/AdminManage/UpdateAdmin",
+  "/api/v1/AdminManage/UpdateSystemUser/:id",
   authController.verifyTokenAdmin,
   systemUserController.updateSystemUser
+);
+
+router.put(
+  "/api/v1/UpdateAccountClient",
+  authController.verifyTokenClient,
+  systemUserController.updateAccountClient
 );
 
 router.post(
   "/api/v1/AdminManage/CreateAdmin",
   authController.verifyTokenAdmin,
-  systemUserController.createSystemUser
+  systemUserController.createAdmin
 );
 
 router.get(
