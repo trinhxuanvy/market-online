@@ -1,19 +1,9 @@
 import { Request, Response } from "express";
-import { genSaltSync, hashSync } from "bcrypt";
-import { ObjectUser } from "../models/ObjectUserModel";
-import {
-  SystemUser,
-  findOneById,
-  find,
-  createOne,
-  createOnlyUser,
-} from "../models/SystemUser";
-
-const saltRounds = genSaltSync(10);
+import * as SystemUser from "../models/SystemUser";
 
 export const getSystemUsers = async (req: Request, res: Response) => {
   try {
-    const systemUsers = await find();
+    const systemUsers = await SystemUser.find();
 
     res.status(200).send({
       total: systemUsers.length,
@@ -30,7 +20,7 @@ export const getSystemUserById = (
   req: Request<{ id: number }>,
   res: Response
 ) => {
-  findOneById(req.params.id)
+  SystemUser.findOneById(req.params.id)
     .then((data) => {
       res.status(200).send({ entity: data });
     })
@@ -39,21 +29,17 @@ export const getSystemUserById = (
     });
 };
 
-export const registerAccount = async (
-  req: Request<ObjectUser>,
-  res: Response
-) => {
-  const hashPassword = hashSync(req.body?.password, saltRounds);
-  createOnlyUser({
-    ...req.body,
-    isDeleted: false,
-    userType: 1,
-    password: hashPassword,
-  })
-    .then((data) => {
-      res.status(200).send({ id: data });
-    })
-    .catch((err) => {
-      res.status(404).send({ message: "Error" });
-    });
+export const updateSystemUser = async (req: Request, res: Response) => {
+  const newSystemUser = await SystemUser.updateOne({
+    userId: 1712673,
+  });
+  res.send(true);
+};
+
+export const createSystemUser = async (req: Request, res: Response) => {
+  const systemUser: SystemUser.SystemUser = { ...req.body };
+
+  SystemUser.createOne(systemUser)
+    .then((data) => res.send(data))
+    .catch((err) => res.send(err));
 };
