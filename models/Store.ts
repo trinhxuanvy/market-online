@@ -1,7 +1,7 @@
-import { OkPacket, RowDataPacket } from 'mysql2';
-import { Region, StoreType } from '../config/enum';
-import { database } from '../connection';
-import { isObjEmpty, isDate, isBoolean } from '../utils';
+import { OkPacket, RowDataPacket } from "mysql2";
+import { Region, StoreType } from "../config/enum";
+import { database } from "../connection";
+import { isObjEmpty, isDate, isBoolean } from "../utils";
 
 export interface Store {
   storeId?: number | null;
@@ -40,8 +40,8 @@ export const find = (query?: Store): Promise<Store[]> => {
         arrValue.push(query[item]);
       }
 
-      queryString += ' WHERE ' + arrAttrStr.join(' and ');
-      queryString += ' AND isdeleted = false ';
+      queryString += " WHERE " + arrAttrStr.join(" and ");
+      queryString += " AND isdeleted = false ";
     }
 
     database.query(queryString, arrValue, (err, result) => {
@@ -52,11 +52,11 @@ export const find = (query?: Store): Promise<Store[]> => {
 
       rows.forEach((row) => {
         const entityDb: Store = {
-          storeId: row.storeid || '',
-          userId: row.userid || '',
-          storeName: row.storename || '',
-          address: row.address || '',
-          phoneNumber: row.phonenumber || '',
+          storeId: row.storeid || "",
+          userId: row.userid || "",
+          storeName: row.storename || "",
+          address: row.address || "",
+          phoneNumber: row.phonenumber || "",
           storeType: row.storetype || StoreType.Food,
           createdUser: row.createduser,
           createdDate: row.createddate,
@@ -67,7 +67,7 @@ export const find = (query?: Store): Promise<Store[]> => {
           isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
           region: row.region || Region.Green,
           ratting: row.ratting || 1,
-          storeProfile: row.storeprofile || '',
+          storeProfile: row.storeprofile || "",
           longtitude: row.longtitude || 0,
           latitude: row.latitude || 0,
         };
@@ -91,11 +91,11 @@ export const findOneById = (entityId: number): Promise<Store> => {
         <RowDataPacket>result == null ? null : (<RowDataPacket>result)[0];
       const entity: Store = row
         ? {
-            storeId: row.storeid || '',
-            userId: row.userid || '',
-            storeName: row.storename || '',
-            address: row.address || '',
-            phoneNumber: row.phonenumber || '',
+            storeId: row.storeid || "",
+            userId: row.userid || "",
+            storeName: row.storename || "",
+            address: row.address || "",
+            phoneNumber: row.phonenumber || "",
             storeType: row.storetype || StoreType.Food,
             createdUser: row.createduser,
             createdDate: row.createddate,
@@ -106,7 +106,7 @@ export const findOneById = (entityId: number): Promise<Store> => {
             isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
             region: row.region || Region.Green,
             ratting: row.ratting || 1,
-            storeProfile: row.storeprofile || '',
+            storeProfile: row.storeprofile || "",
             longtitude: row.longtitude || 0,
             latitude: row.latitude || 0,
           }
@@ -123,20 +123,20 @@ export const createOne = (entity: Store): Promise<boolean> => {
     const entityAdapt: Store = {
       storeId: entity.storeId || -1,
       userId: entity.userId || -1,
-      storeName: entity.storeName || '',
-      address: entity.address || '',
-      phoneNumber: entity.phoneNumber || '',
+      storeName: entity.storeName || "",
+      address: entity.address || "",
+      phoneNumber: entity.phoneNumber || "",
       storeType: entity.storeType || StoreType.Food,
-      createdUser: entity.createdUser || '',
+      createdUser: entity.createdUser || "",
       createdDate: entity.createdDate || new Date(),
-      updatedUser: entity.updatedUser || '',
+      updatedUser: entity.updatedUser || "",
       updatedDate: entity.updatedDate || new Date(),
-      deletedUser: entity.deletedUser || '',
+      deletedUser: entity.deletedUser || "",
       deletedDate: entity.deletedDate,
       isDeleted: entity.isDeleted || false,
       region: entity.region || Region.Green,
       ratting: entity.ratting || 1,
-      storeProfile: entity.storeProfile || '',
+      storeProfile: entity.storeProfile || "",
       longtitude: entity.longtitude || 0,
       latitude: entity.latitude || 0,
     };
@@ -162,7 +162,7 @@ export const createOne = (entity: Store): Promise<boolean> => {
 
     if (!isObjEmpty(entity)) {
       for (let item in entityAdapt) {
-        if (item === 'storeId') continue;
+        if (item === "storeId") continue;
         arrValue.push(entityAdapt[item]);
       }
     }
@@ -183,10 +183,8 @@ export const updateOne = (entity: Store): Promise<boolean> => {
     if (!isObjEmpty(entity)) {
       for (let item in entity) {
         if (isDate(entity[item])) {
-          arrAttrStr.push(
-            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`,
-          );
-        } else if (item !== 'storeId') {
+          arrAttrStr.push(`${item.toLowerCase()} = DATE(' ? ')`);
+        } else if (item !== "storeId") {
           arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }
 
@@ -196,13 +194,13 @@ export const updateOne = (entity: Store): Promise<boolean> => {
           arrValue.push(Number(entity[item]));
         }
 
-        if (item === 'storeId') {
+        if (item === "storeId") {
           arrValue.pop();
         }
       }
 
       queryString +=
-        arrAttrStr.join(', ') + ` WHERE storeid = ${entity.storeId}`;
+        arrAttrStr.join(", ") + ` WHERE storeid = ${entity.storeId}`;
     }
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);

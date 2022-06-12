@@ -4,7 +4,7 @@ import { compareSync, genSaltSync, hashSync } from "bcrypt";
 import { ObjectUser } from "../models/ObjectUserModel";
 import * as SystemUser from "../models/SystemUser";
 import { UserType } from "../config/enum";
-import config from "../config/config";
+import { config } from "../config";
 import { checkExpiredDate5Minutes } from "../utils";
 
 export const verifyTokenClient = async (
@@ -75,7 +75,7 @@ export const verifyTokenClient = async (
             });
           }
 
-          res["data"] = clientObj;
+          req["data"] = clientObj;
           next();
         } else {
           return res
@@ -161,7 +161,9 @@ export const verifyTokenAdmin = async (
             });
           }
 
-          res["data"] = adminObj;
+          console.log(adminObj);
+          req["data"] = adminObj;
+          console.log(req["data"]);
           next();
         } else {
           return res
@@ -190,6 +192,10 @@ export const loginClient = async (req: Request, res: Response) => {
         .send({ status: 404, message: "Account is not exist." });
     }
 
+    if (client[0].userType !== UserType.Client || client[0].isDeleted == true) {
+      return res.status(404).send({ status: 404, message: "Cannot access." });
+    }
+
     if (!compareSync(password, client[0].password)) {
       return res
         .status(404)
@@ -201,15 +207,29 @@ export const loginClient = async (req: Request, res: Response) => {
       username: client[0].username,
       userType: client[0].userType,
     };
-    const token = sign(clientObj, config.tokenSecret, {
+    let token = sign(clientObj, config.tokenSecret, {
       algorithm: "HS256",
       expiresIn: config.tokenLife,
     });
-    const bearer = "Bearer " + token;
+    const refreshToken = sign(clientObj, config.refreshTokenSecret, {
+      algorithm: "HS256",
+      expiresIn: config.refreshTokenLife,
+    });
 
-    res
-      .status(200)
-      .send({ status: 200, message: "Logged in successfully", bearer });
+    await SystemUser.updateOne({
+      userId: client[0].userId,
+      token,
+      refresh_token: refreshToken,
+    });
+
+    token = "Bearer " + token;
+
+    res.status(200).send({
+      status: 200,
+      message: "Logged in successfully",
+      token,
+      refresh_token: refreshToken,
+    });
   } catch (error) {
     res.status(404).send({ status: 404, message: "Error" });
   }
@@ -224,6 +244,10 @@ export const loginAdmin = async (req: Request, res: Response) => {
       return res
         .status(404)
         .send({ status: 404, message: "Account is not exist." });
+    }
+
+    if (admin[0].userType !== UserType.Admin) {
+      return res.status(404).send({ status: 404, message: "Cannot access." });
     }
 
     if (!compareSync(password, admin[0].password)) {
@@ -258,7 +282,7 @@ export const loginAdmin = async (req: Request, res: Response) => {
       status: 200,
       message: "Logged in successfully",
       token,
-      refreshToken,
+      refresh_token: refreshToken,
     });
   } catch (error) {
     res.status(404).send({ status: 404, message: "Error" });

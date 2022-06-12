@@ -1,5 +1,9 @@
 import { Request, Response } from "express";
+import { hashSync } from "bcrypt";
+import { ObjectUser } from "../models/ObjectUserModel";
 import * as SystemUser from "../models/SystemUser";
+import { config } from "../config";
+import { UserType } from "../config/enum";
 
 export const getSystemUsers = async (req: Request, res: Response) => {
   try {
@@ -29,16 +33,72 @@ export const getSystemUserById = (
     });
 };
 
-export const updateSystemUser = async (req: Request, res: Response) => {
-  const newSystemUser = await SystemUser.updateOne({
-    userId: 1712673,
-  });
-  res.send(true);
+export const updateSystemUser = async (
+  req: Request<{ id: number }>,
+  res: Response
+) => {
+  try {
+    const admin: ObjectUser = req["data"];
+
+    await SystemUser.updateOne({
+      userId: req.params.id,
+      ...req.body,
+      updatedUser: admin.userId.toString(),
+      updatedDate: new Date(),
+    })
+      .then(() => {
+        return res
+          .status(200)
+          .send({ status: 200, message: "Updated successfully." });
+      })
+      .catch(() => {
+        return res.status(404).send({ status: 404, message: "Error." });
+      });
+  } catch (error) {
+    return res.status(404).send({ status: 404, message: "Error." });
+  }
 };
 
-export const createSystemUser = async (req: Request, res: Response) => {
+export const updateAccountClient = async (req: Request, res: Response) => {
   try {
-    const systemUser: SystemUser.SystemUser = { ...req.body };
+    const client: ObjectUser = req["data"];
+
+    if (client.userType !== UserType.Client) {
+      res
+        .status(404)
+        .send({ status: 404, message: "This account is not an client." });
+    }
+
+    await SystemUser.updateOne({
+      ...req.body,
+      userId: client.userId,
+      updatedUser: client.userId.toString(),
+      updatedDate: new Date(Date.now()),
+      userType: UserType.Client,
+    })
+      .then(() => {
+        return res
+          .status(200)
+          .send({ status: 200, message: "Updated successfully." });
+      })
+      .catch(() => {
+        return res.status(404).send({ status: 404, message: "Error." });
+      });
+  } catch (error) {
+    return res.status(404).send({ status: 404, message: "Error." });
+  }
+};
+
+export const createAdmin = async (req: Request, res: Response) => {
+  try {
+    const admin: ObjectUser = req["data"];
+    const hashPassword = hashSync(req.body.password, config.saltRounds);
+    const systemUser: SystemUser.SystemUser = {
+      ...req.body,
+      password: hashPassword,
+      userType: UserType.Admin,
+      createdUser: admin.userId.toString(),
+    };
     const user = await SystemUser.find({ username: systemUser.username });
 
     if (user.length !== 0) {
@@ -51,8 +111,11 @@ export const createSystemUser = async (req: Request, res: Response) => {
       .then((data) =>
         res.status(200).send({ status: 200, message: "A user was created." })
       )
-      .catch((err) => res.status(404).send({ status: 404, message: "Error." }));
+      .catch((err) =>
+        res.status(404).send({ status: 404, message: "Error.", error: err })
+      );
   } catch (error) {
+    console.log(error);
     return res.status(404).send({ status: 404, message: "Error." });
   }
 };
@@ -77,7 +140,13 @@ export const deleteSystemUser = (
   res: Response
 ) => {
   try {
-    SystemUser.updateOne({ userId: req.params.id, isDeleted: true })
+    const admin: ObjectUser = req["data"];
+    SystemUser.updateOne({
+      userId: req.params.id,
+      isDeleted: true,
+      deletedUser: admin.userId.toString(),
+      deletedDate: new Date(Date.now()),
+    })
       .then((data) =>
         res.status(200).send({ status: 200, message: "This user was deleted." })
       )
@@ -92,7 +161,13 @@ export const unDeleteSystemUser = (
   res: Response
 ) => {
   try {
-    SystemUser.updateOne({ userId: req.params.id, isDeleted: false })
+    const admin: ObjectUser = req["data"];
+    SystemUser.updateOne({
+      userId: req.params.id,
+      isDeleted: false,
+      updatedUser: admin.userId.toString(),
+      updatedDate: new Date(Date.now()),
+    })
       .then((data) =>
         res
           .status(200)

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import listEndpoints from "express-list-endpoints";
 import routes from "./routes";
-import { getApiTable } from "./utils/api-table";
+import { getApiTable } from "./utils";
 
 dotenv.config();
 
