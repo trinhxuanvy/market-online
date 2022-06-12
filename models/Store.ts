@@ -1,4 +1,5 @@
 import { OkPacket, RowDataPacket } from 'mysql2';
+import { Region, StoreType } from '../config/enum';
 import { database } from '../connection';
 import { isObjEmpty, isDate } from '../utils';
 
@@ -42,6 +43,8 @@ export const find = (query?: Store): Promise<Store[]> => {
       queryString += ' WHERE ' + arrAttrStr.join(' and ');
     }
 
+    queryString += ' AND isdeleted = false ';
+
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
 
@@ -55,7 +58,7 @@ export const find = (query?: Store): Promise<Store[]> => {
           storeName: row.storename || '',
           address: row.address || '',
           phoneNumber: row.phonenumber || '',
-          storeType: row.storetype || 1,
+          storeType: row.storetype || StoreType.Food,
           createdUser: row.createduser,
           createdDate: row.createddate,
           updatedUser: row.updateduser,
@@ -63,7 +66,7 @@ export const find = (query?: Store): Promise<Store[]> => {
           deletedUser: row.deleteduser,
           deletedDate: row.deleteddate,
           isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
-          region: row.region || 1,
+          region: row.region || Region.Green,
           ratting: row.ratting || 1,
           storeProfile: row.storeprofile || '',
           longtitude: row.longtitude || 0,
@@ -80,7 +83,7 @@ export const find = (query?: Store): Promise<Store[]> => {
 
 export const findOneById = (entityId: number): Promise<Store> => {
   return new Promise<Store>((resolve, reject) => {
-    var queryString = `SELECT * FROM store WHERE storeid = ?`;
+    var queryString = `SELECT * FROM store WHERE storeid = ? AND isdeleted = false`;
 
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);
@@ -93,7 +96,7 @@ export const findOneById = (entityId: number): Promise<Store> => {
             storeName: row.storename || '',
             address: row.address || '',
             phoneNumber: row.phonenumber || '',
-            storeType: row.storetype || 1,
+            storeType: row.storetype || StoreType.Food,
             createdUser: row.createduser,
             createdDate: row.createddate,
             updatedUser: row.updateduser,
@@ -101,7 +104,7 @@ export const findOneById = (entityId: number): Promise<Store> => {
             deletedUser: row.deleteduser,
             deletedDate: row.deleteddate,
             isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
-            region: row.region || 1,
+            region: row.region || Region.Green,
             ratting: row.ratting || 1,
             storeProfile: row.storeprofile || '',
             longtitude: row.longtitude || 0,
@@ -123,15 +126,15 @@ export const createOne = (entity: Store): Promise<boolean> => {
       storeName: entity.storeName || '',
       address: entity.address || '',
       phoneNumber: entity.phoneNumber || '',
-      storeType: entity.storeType || 1,
+      storeType: entity.storeType || StoreType.Food,
       createdUser: entity.createdUser || '',
-      createdDate: entity.createdDate,
+      createdDate: entity.createdDate || new Date(),
       updatedUser: entity.updatedUser || '',
-      updatedDate: entity.updatedDate,
+      updatedDate: entity.updatedDate || new Date(),
       deletedUser: entity.deletedUser || '',
       deletedDate: entity.deletedDate,
-      isDeleted: entity.isDeleted || true,
-      region: entity.region || 1,
+      isDeleted: entity.isDeleted || false,
+      region: entity.region || Region.Green,
       ratting: entity.ratting || 1,
       storeProfile: entity.storeProfile || '',
       longtitude: entity.longtitude || 0,
@@ -180,15 +183,15 @@ export const updateOne = (entity: Store): Promise<boolean> => {
       storeName: entity.storeName || '',
       address: entity.address || '',
       phoneNumber: entity.phoneNumber || '',
-      storeType: entity.storeType || 1,
+      storeType: entity.storeType || StoreType.Food,
       createdUser: entity.createdUser || '',
       createdDate: entity.createdDate,
       updatedUser: entity.updatedUser || '',
-      updatedDate: entity.updatedDate,
+      updatedDate: entity.updatedDate || new Date(),
       deletedUser: entity.deletedUser || '',
       deletedDate: entity.deletedDate,
-      isDeleted: entity.isDeleted || true,
-      region: entity.region || 1,
+      isDeleted: entity.isDeleted || false,
+      region: entity.region || Region.Green,
       ratting: entity.ratting || 1,
       storeProfile: entity.storeProfile || '',
       longtitude: entity.longtitude || 0,
@@ -203,7 +206,7 @@ export const updateOne = (entity: Store): Promise<boolean> => {
         createduser = ?,
         createddate = ?,
         updateduser = ?,
-        updateddate = ?,
+        updateddate = CURRENT_TIME(),
         deleteduser = ?,
         deleteddate = ?,
         isdeleted = ?,
@@ -230,7 +233,7 @@ export const updateOne = (entity: Store): Promise<boolean> => {
 export const deleteOne = (entityId: number): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const queryString = `DELETE from store
-        where storeid = ?`;
+    where storeid = ?`;
 
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);
