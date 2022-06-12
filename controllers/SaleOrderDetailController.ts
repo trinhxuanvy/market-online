@@ -7,6 +7,10 @@ import {
   updateOne,
   deleteOne,
 } from '../models/SaleOrderDetail';
+import {
+  findOneById as FindProductById,
+  updateOne as UpdateProductQuantity,
+} from '../models/Product';
 
 export const get = async (req: Request, res: Response) => {
   try {
@@ -46,7 +50,23 @@ export const getBySaleOrderId = async (
 };
 export const post = async (req: Request<SaleOrderDetail>, res: Response) => {
   try {
+    const getPro = await FindProductById(req.body.productId);
+
+    if (req.body.quantity > getPro.quantity) {
+      res.status(404).send({
+        message: 'Error',
+      });
+
+      return;
+    }
+
     const entities = await createOne(req.body);
+
+    const updateProd = await UpdateProductQuantity({
+      productId: req.body.productId,
+      quantity: getPro.quantity - req.body.quantity,
+    });
+
     res.status(200).send(true);
   } catch (error) {
     res.status(404).send({
@@ -69,7 +89,16 @@ export const deleteById = async (
   res: Response,
 ) => {
   try {
+    const saleorderdetail = await findOneById(req.params.id);
+    const getPro = await FindProductById(saleorderdetail.productId);
+
     const entities = await deleteOne(req.params.id);
+
+    const updateProd = await UpdateProductQuantity({
+      productId: getPro.productId,
+      quantity: getPro.quantity + saleorderdetail.quantity,
+    });
+
     res.status(200).send(true);
   } catch (error) {
     res.status(404).send({

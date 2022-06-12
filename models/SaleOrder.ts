@@ -121,8 +121,8 @@ export const findOneById = (entityId: number): Promise<SaleOrder> => {
   });
 };
 
-export const createOne = (entity: SaleOrder): Promise<boolean> => {
-  return new Promise<boolean>((resolve, reject) => {
+export const createOne = (entity: SaleOrder): Promise<number> => {
+  return new Promise<number>((resolve, reject) => {
     const arrValue = [];
     const entityAdapt: SaleOrder = {
       saleOrderId: entity.saleOrderId || -1,
@@ -173,7 +173,7 @@ export const createOne = (entity: SaleOrder): Promise<boolean> => {
 
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
-      resolve(true);
+      resolve((<OkPacket>result).insertId);
     });
   });
 };

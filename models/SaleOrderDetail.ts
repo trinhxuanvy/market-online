@@ -150,3 +150,14 @@ export const deleteOne = (entityId: number): Promise<boolean> => {
     });
   });
 };
+export const deleteManyBySaleOrderId = (entityId: number): Promise<boolean> => {
+  return new Promise<boolean>((resolve, reject) => {
+    const queryString = `DELETE from saleorderdetail
+    where saleorderid = ?`;
+
+    database.query(queryString, entityId, (err, result) => {
+      if (err) reject(err);
+      resolve(true);
+    });
+  });
+};

@@ -7,6 +7,10 @@ import {
   updateOne,
   deleteOne,
 } from '../models/SaleOrder';
+import {
+  SaleOrderPost,
+  createOne as CreateFull,
+} from '../models/SaleOrderPost';
 
 export const get = async (req: Request, res: Response) => {
   try {
@@ -44,6 +48,19 @@ export const getByUserId = async (req: Request<SaleOrder>, res: Response) => {
 export const post = async (req: Request<SaleOrder>, res: Response) => {
   try {
     const entities = await createOne(req.body);
+    res.status(200).send(true);
+  } catch (error) {
+    res.status(404).send({
+      message: 'Error',
+    });
+  }
+};
+export const postWithFull = async (
+  req: Request<SaleOrderPost>,
+  res: Response,
+) => {
+  try {
+    const entities = await CreateFull(req.body);
     res.status(200).send(true);
   } catch (error) {
     res.status(404).send({
