@@ -24,7 +24,7 @@ router.get(
   storeController.deleteStore
 );
 
-router.put(
+router.get(
   "/api/v1/UnDeleteStore/:id",
   verifyTokenClient,
   storeController.unDeleteStore
