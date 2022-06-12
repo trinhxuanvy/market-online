@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as storeController from '../controllers/StoreController';
 const router = Router();
 
+router.get('/api/v1/Store', storeController.get);
 router.get('/api/v1/Store/:id', storeController.getById);
 router.post('/api/v1/Store', storeController.post);
 router.put('/api/v1/Store', storeController.put);

@@ -37,9 +37,8 @@ export const find = (query?: Product): Promise<Product[]> => {
       }
 
       queryString += ' WHERE ' + arrAttrStr.join(' and ');
+      queryString += ' AND isdeleted = false ';
     }
-
-    queryString += ' AND isdeleted = false ';
 
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);

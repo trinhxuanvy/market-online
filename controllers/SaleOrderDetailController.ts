@@ -8,6 +8,17 @@ import {
   deleteOne,
 } from '../models/SaleOrderDetail';
 
+export const get = async (req: Request, res: Response) => {
+  try {
+    const entity = await find();
+
+    res.status(200).send({ total: entity.length, entities: entity });
+  } catch (error) {
+    res.status(404).send({
+      message: 'Error',
+    });
+  }
+};
 export const getById = async (req: Request<{ id: number }>, res: Response) => {
   try {
     const entity = await findOneById(req.params.id);

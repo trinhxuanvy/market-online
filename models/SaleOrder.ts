@@ -42,10 +42,10 @@ export const find = (query?: SaleOrder): Promise<SaleOrder[]> => {
       }
 
       queryString += ' WHERE ' + arrAttrStr.join(' and ');
+      queryString += ' AND isdeleted = false ';
     }
 
-    queryString += ' AND isdeleted = false ';
-
+    console.log(queryString);
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
 
