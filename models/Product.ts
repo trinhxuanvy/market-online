@@ -1,15 +1,17 @@
+import { Console } from 'console';
 import { OkPacket, RowDataPacket } from 'mysql2';
-import { Region, StoreType } from '../config/enum';
 import { database } from '../connection';
 import { isObjEmpty, isDate, isBoolean } from '../utils';
 
-export interface Store {
+export interface Product {
+  productId?: number | null;
+  productName?: string | null;
+  productType?: number | null;
   storeId?: number | null;
-  userId?: number | null;
-  storeName?: string | null;
-  address?: string | null;
-  phoneNumber?: string | null;
-  storeType?: number | null;
+  quantity?: number | null;
+  vat?: number | null;
+  salePrice?: number | null;
+
   createdUser?: string | null;
   createdDate?: Date | null;
   updatedUser?: string | null;
@@ -17,18 +19,13 @@ export interface Store {
   deletedUser?: string | null;
   deletedDate?: Date | null;
   isDeleted?: boolean | null;
-  region?: number | null;
-  ratting?: number | null;
-  storeProfile?: string | null;
-  longtitude?: number | null;
-  latitude?: number | null;
 }
 
-export const find = (query?: Store): Promise<Store[]> => {
-  return new Promise<Store[]>((resolve, reject) => {
+export const find = (query?: Product): Promise<Product[]> => {
+  return new Promise<Product[]>((resolve, reject) => {
     let arrAttrStr = [];
     let arrValue = [];
-    let queryString = `SELECT * FROM store`;
+    let queryString = `SELECT * FROM product`;
 
     if (!isObjEmpty(query)) {
       for (let item in query) {
@@ -49,16 +46,18 @@ export const find = (query?: Store): Promise<Store[]> => {
       if (err) reject(err);
 
       const rows = <RowDataPacket[]>result || [];
-      const entity: Store[] = [];
+      const entity: Product[] = [];
 
       rows.forEach((row) => {
-        const entityDb: Store = {
-          storeId: row.storeid || '',
-          userId: row.userid || '',
-          storeName: row.storename || '',
-          address: row.address || '',
-          phoneNumber: row.phonenumber || '',
-          storeType: row.storetype || StoreType.Food,
+        const entityDb: Product = {
+          productId: row.productid || '',
+          productName: row.productname || '',
+          productType: row.producttype || '',
+          storeId: row.storeid || -1,
+          quantity: row.quantity || 0,
+          vat: row.vat || -1,
+          salePrice: row.saleprice || 0,
+
           createdUser: row.createduser,
           createdDate: row.createddate,
           updatedUser: row.updateduser,
@@ -66,11 +65,6 @@ export const find = (query?: Store): Promise<Store[]> => {
           deletedUser: row.deleteduser,
           deletedDate: row.deleteddate,
           isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
-          region: row.region || Region.Green,
-          ratting: row.ratting || 1,
-          storeProfile: row.storeprofile || '',
-          longtitude: row.longtitude || 0,
-          latitude: row.latitude || 0,
         };
 
         entity.push(entityDb);
@@ -81,22 +75,24 @@ export const find = (query?: Store): Promise<Store[]> => {
   });
 };
 
-export const findOneById = (entityId: number): Promise<Store> => {
-  return new Promise<Store>((resolve, reject) => {
-    var queryString = `SELECT * FROM store WHERE storeid = ? AND isdeleted = false`;
+export const findOneById = (entityId: number): Promise<Product> => {
+  return new Promise<Product>((resolve, reject) => {
+    var queryString = `SELECT * FROM product WHERE productid = ? AND isdeleted = false`;
 
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);
 
       const row = (<RowDataPacket>result)[0];
-      const entity: Store = row
+      const entity: Product = row
         ? {
-            storeId: row.storeid || '',
-            userId: row.userid || '',
-            storeName: row.storename || '',
-            address: row.address || '',
-            phoneNumber: row.phonenumber || '',
-            storeType: row.storetype || StoreType.Food,
+            productId: row.productid || '',
+            productName: row.productname || '',
+            productType: row.producttype || '',
+            storeId: row.storeid || -1,
+            quantity: row.quantity || 0,
+            vat: row.vat || -1,
+            salePrice: row.saleprice || 0,
+
             createdUser: row.createduser,
             createdDate: row.createddate,
             updatedUser: row.updateduser,
@@ -104,11 +100,6 @@ export const findOneById = (entityId: number): Promise<Store> => {
             deletedUser: row.deleteduser,
             deletedDate: row.deleteddate,
             isDeleted: row.isdeleted === null ? 0 : row.isdeleted[0],
-            region: row.region || Region.Green,
-            ratting: row.ratting || 1,
-            storeProfile: row.storeprofile || '',
-            longtitude: row.longtitude || 0,
-            latitude: row.latitude || 0,
           }
         : null;
 
@@ -117,16 +108,18 @@ export const findOneById = (entityId: number): Promise<Store> => {
   });
 };
 
-export const createOne = (entity: Store): Promise<boolean> => {
+export const createOne = (entity: Product): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const arrValue = [];
-    const entityAdapt: Store = {
+    const entityAdapt: Product = {
+      productId: entity.productId || -1,
+      productName: entity.productName || '',
+      productType: entity.productType || 0,
       storeId: entity.storeId || -1,
-      userId: entity.userId || -1,
-      storeName: entity.storeName || '',
-      address: entity.address || '',
-      phoneNumber: entity.phoneNumber || '',
-      storeType: entity.storeType || StoreType.Food,
+      quantity: entity.quantity || 0,
+      vat: entity.vat || -1,
+      salePrice: entity.salePrice || 0,
+
       createdUser: entity.createdUser || '',
       createdDate: entity.createdDate || new Date(),
       updatedUser: entity.updatedUser || '',
@@ -134,35 +127,27 @@ export const createOne = (entity: Store): Promise<boolean> => {
       deletedUser: entity.deletedUser || '',
       deletedDate: entity.deletedDate,
       isDeleted: entity.isDeleted || false,
-      region: entity.region || Region.Green,
-      ratting: entity.ratting || 1,
-      storeProfile: entity.storeProfile || '',
-      longtitude: entity.longtitude || 0,
-      latitude: entity.latitude || 0,
     };
-    const queryString = `INSERT INTO store (
-        userid,
-        storename,
-        address,
-        phonenumber,
-        storetype,
+    const queryString = `INSERT INTO product (
+        productname,
+        producttype,
+        storeid,
+        quantity,
+        vat,
+        saleprice,
+
         createduser,
         createddate,
         updateduser,
         updateddate,
         deleteduser,
         deleteddate,
-        isdeleted,
-        region,
-        ratting,
-        storeprofile,
-        longtitude,
-        latitude
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        isdeleted
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     if (!isObjEmpty(entity)) {
       for (let item in entityAdapt) {
-        if (item === 'storeId') continue;
+        if (item === 'productId') continue;
         arrValue.push(entityAdapt[item]);
       }
     }
@@ -174,10 +159,10 @@ export const createOne = (entity: Store): Promise<boolean> => {
   });
 };
 
-export const updateOne = (entity: Store): Promise<boolean> => {
+export const updateOne = (entity: Product): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const arrValue = [];
-    let queryString = `UPDATE store SET `;
+    let queryString = `UPDATE product SET `;
 
     let arrAttrStr = [];
     if (!isObjEmpty(entity)) {
@@ -186,7 +171,7 @@ export const updateOne = (entity: Store): Promise<boolean> => {
           arrAttrStr.push(
             `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`,
           );
-        } else if (item !== 'storeId') {
+        } else if (item !== 'productId') {
           arrAttrStr.push(`${item.toLowerCase()} = ?`);
         }
 
@@ -196,13 +181,13 @@ export const updateOne = (entity: Store): Promise<boolean> => {
           arrValue.push(Number(entity[item]));
         }
 
-        if (item === 'storeId') {
+        if (item === 'productId') {
           arrValue.pop();
         }
       }
 
       queryString +=
-        arrAttrStr.join(', ') + ` WHERE storeid = ${entity.storeId}`;
+        arrAttrStr.join(', ') + ` WHERE productid = ${entity.productId}`;
     }
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
@@ -212,8 +197,8 @@ export const updateOne = (entity: Store): Promise<boolean> => {
 };
 export const deleteOne = (entityId: number): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
-    const queryString = `DELETE from store
-    where storeid = ?`;
+    const queryString = `DELETE from product
+    where productid = ?`;
 
     database.query(queryString, entityId, (err, result) => {
       if (err) reject(err);

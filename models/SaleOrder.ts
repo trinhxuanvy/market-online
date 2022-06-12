@@ -1,7 +1,7 @@
 import { OkPacket, RowDataPacket } from 'mysql2';
 import { PaymentType, Region, SaleOrderType, StoreType } from '../config/enum';
 import { database } from '../connection';
-import { isObjEmpty, isDate } from '../utils';
+import { isObjEmpty, isDate, isBoolean } from '../utils';
 
 export interface SaleOrder {
   saleOrderId?: number | null;
@@ -180,55 +180,33 @@ export const createOne = (entity: SaleOrder): Promise<boolean> => {
 export const updateOne = (entity: SaleOrder): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const arrValue = [];
-    const entityAdapt: SaleOrder = {
-      saleOrderId: entity.saleOrderId || -1,
-      customerId: entity.customerId || -1,
-      statusId: entity.statusId || SaleOrderType.Unapproved,
-      totalAmount: entity.totalAmount || 0,
-      shippingCost: entity.shippingCost || 0,
-      discount: entity.discount || 0,
-      debt: entity.debt || 0,
+    let queryString = `UPDATE saleorder SET `;
 
-      createdUser: entity.createdUser,
-      createdDate: entity.createdDate,
-      updatedUser: entity.updatedUser,
-      updatedDate: entity.updatedDate || new Date(),
-      deletedUser: entity.deletedUser,
-      deletedDate: entity.deletedDate,
-      isDeleted: entity.isDeleted,
-
-      description: entity.description || '',
-      payType: entity.payType || PaymentType.Money,
-      shipperId: entity.shipperId || -1,
-    };
-    const queryString = `UPDATE saleorder SET 
-        customerid = ?,
-        statusid = ?,
-        totalamount = ?,
-        shippingcost = ?,
-        discount = ?,
-        debt = ?,
-
-        createduser = ?,
-        createddate = ?,
-        updateduser = ?,
-        updateddate = CURRENT_TIME(),
-        deleteduser = ?,
-        deleteddate = ?,
-        isdeleted = ?,
-
-        description = ?,
-        paytype = ?,
-        shipperid = ?
-        where saleorderid = ${entityAdapt.saleOrderId}`;
-
+    let arrAttrStr = [];
     if (!isObjEmpty(entity)) {
-      for (let item in entityAdapt) {
-        if (item === 'saleOrderId') continue;
-        arrValue.push(entityAdapt[item]);
-      }
-    }
+      for (let item in entity) {
+        if (isDate(entity[item])) {
+          arrAttrStr.push(
+            `${item.toLowerCase()} = STR_TO_DATE(?, '%m/%%d/%Y')`,
+          );
+        } else if (item !== 'saleOrderId') {
+          arrAttrStr.push(`${item.toLowerCase()} = ?`);
+        }
 
+        if (!isBoolean(entity[item])) {
+          arrValue.push(entity[item]);
+        } else {
+          arrValue.push(Number(entity[item]));
+        }
+
+        if (item === 'saleOrderId') {
+          arrValue.pop();
+        }
+      }
+
+      queryString +=
+        arrAttrStr.join(', ') + ` WHERE saleorderid = ${entity.saleOrderId}`;
+    }
     database.query(queryString, arrValue, (err, result) => {
       if (err) reject(err);
       resolve(true);
